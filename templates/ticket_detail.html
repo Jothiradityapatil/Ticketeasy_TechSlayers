@@ -35,8 +35,7 @@
         </div>
     </div>
 
-    <form action="{{ url_for('ticket_update', ticket_id=ticket.id) }}" method="POST"
-        class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <div class="lg:col-span-2 space-y-6">
 
@@ -47,21 +46,113 @@
                 </div>
             </div>
 
-
-            {% if user.role in ['admin', 'agent', 'manager'] %}
+            {% if user.role in ['agent', 'manager'] %}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Add Remarks</h3>
-                <textarea name="remarks" id="remarks" rows="4"
-                    class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3"
-                    placeholder="Enter remarks here... (Required for In Progress / Resolved)">{{ ticket.remarks or '' }}</textarea>
+                <form action="{{ url_for('ticket_update', ticket_id=ticket.id) }}" method="POST" id="remarks-form">
+                    <textarea name="remarks" id="remarks" rows="4"
+                        class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3"
+                        placeholder="Enter remarks here... (Required for In Progress / Resolved)">{{ ticket.remarks or '' }}</textarea>
+                </form>
             </div>
             {% endif %}
+
+            {# ==================== FEEDBACK SECTION ==================== #}
+            {% if ticket.status == 'resolved' %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                {% if ticket.feedback %}
+                {# --- SHOW EXISTING FEEDBACK (read-only) --- #}
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Employee Feedback</h3>
+                <div class="flex items-center gap-1 mb-3">
+                    {% for i in range(1, 6) %}
+                    <svg class="w-7 h-7 {{ 'text-yellow-400' if i <= ticket.feedback.rating else 'text-gray-200' }}" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    {% endfor %}
+                    <span class="ml-2 text-sm font-semibold text-gray-600">{{ ticket.feedback.rating }}/5</span>
+                </div>
+                {% if ticket.feedback.comment %}
+                <p class="text-gray-700 text-sm italic bg-gray-50 rounded-lg p-3 border border-gray-100">"{{ ticket.feedback.comment }}"</p>
+                {% endif %}
+                <p class="text-xs text-gray-400 mt-2">Submitted on {{ ticket.feedback.created_at.strftime('%b %d, %Y') }}</p>
+
+                {% elif user.role == 'employee' and user.email == ticket.creator.email %}
+                {# --- FEEDBACK FORM (only for ticket creator) --- #}
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Rate this Resolution</h3>
+                <p class="text-sm text-gray-500 mb-4">Your ticket has been resolved. Please rate the service you received.</p>
+
+                <form action="{{ url_for('submit_feedback', ticket_id=ticket.id) }}" method="POST">
+                    {# Star Rating #}
+                    <div class="flex items-center gap-1 mb-4" id="star-rating">
+                        {% for i in range(1, 6) %}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="rating" value="{{ i }}" class="hidden" {% if i == 3 %}checked{% endif %}>
+                            <svg class="w-10 h-10 star-icon text-gray-200 hover:text-yellow-400 transition-colors duration-150" fill="currentColor" viewBox="0 0 20 20" data-value="{{ i }}">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                        </label>
+                        {% endfor %}
+                        <span class="ml-2 text-sm text-gray-500" id="rating-text">3/5</span>
+                    </div>
+
+                    {# Comment #}
+                    <textarea name="feedback_comment" rows="3"
+                        class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 mb-4"
+                        placeholder="Tell us about your experience (optional)..."></textarea>
+
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all transform hover:scale-[1.02]">
+                        Submit Feedback
+                    </button>
+                </form>
+
+                {% endif %}
+            </div>
+            {% endif %}
+            {# ==================== END FEEDBACK ==================== #}
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const stars = document.querySelectorAll('.star-icon');
+                    const ratingText = document.getElementById('rating-text');
+                    if (!stars.length) return;
+                    let currentRating = 3;
+
+                    updateStars(currentRating);
+
+                    stars.forEach(star => {
+                        star.addEventListener('click', function() {
+                            currentRating = parseInt(this.dataset.value);
+                            this.parentElement.querySelector('input').checked = true;
+                            updateStars(currentRating);
+                        });
+                        star.addEventListener('mouseenter', function() {
+                            highlightStars(parseInt(this.dataset.value));
+                        });
+                        star.addEventListener('mouseleave', function() {
+                            updateStars(currentRating);
+                        });
+                    });
+
+                    function highlightStars(val) {
+                        stars.forEach(s => {
+                            const v = parseInt(s.dataset.value);
+                            s.classList.toggle('text-yellow-400', v <= val);
+                            s.classList.toggle('text-gray-200', v > val);
+                        });
+                    }
+                    function updateStars(val) {
+                        highlightStars(val);
+                        if (ratingText) ratingText.textContent = val + '/5';
+                    }
+                });
+            </script>
 
         </div>
 
         <div class="space-y-6">
 
-            {% if user.role in ['admin', 'agent', 'manager'] %}
+            {% if user.role in ['agent', 'manager'] %}
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden sticky top-6">
                 <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
                     <h3 class="font-bold text-gray-800">Agent Controls</h3>
@@ -69,18 +160,14 @@
 
                 <div class="p-6 space-y-5">
 
-
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Update Status</label>
                         <div class="relative">
-                            <select name="status"
+                            <select name="status" form="remarks-form"
                                 class="w-full appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 pr-8">
-                                <option value="open" {% if ticket.status=='open' %}selected{% endif %}>🔵 Open
-                                </option>
-                                <option value="in-progress" {% if ticket.status=='in-progress' %}selected{% endif %}>🟣
-                                    In Progress</option>
-                                <option value="resolved" {% if ticket.status=='resolved' %}selected{% endif %}>🟢
-                                    Resolved</option>
+                                <option value="open" {% if ticket.status=='open' %}selected{% endif %}>🔵 Open</option>
+                                <option value="in-progress" {% if ticket.status=='in-progress' %}selected{% endif %}>🟣 In Progress</option>
+                                <option value="resolved" {% if ticket.status=='resolved' %}selected{% endif %}>🟢 Resolved</option>
                             </select>
                         </div>
                     </div>
@@ -88,28 +175,20 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Update Priority</label>
                         <div class="relative">
-                            <select name="priority"
+                            <select name="priority" form="remarks-form"
                                 class="w-full appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 pr-8">
-                                <option value="low" {% if ticket.priority=='low' %}selected{% endif %}>⚪ Low
-                                </option>
-                                <option value="medium" {% if ticket.priority=='medium' %}selected{% endif %}>🟡
-                                    Medium</option>
-                                <option value="high" {% if ticket.priority=='high' %}selected{% endif %}>🔴 High
-                                </option>
+                                <option value="low" {% if ticket.priority=='low' %}selected{% endif %}>⚪ Low</option>
+                                <option value="medium" {% if ticket.priority=='medium' %}selected{% endif %}>🟡 Medium</option>
+                                <option value="high" {% if ticket.priority=='high' %}selected{% endif %}>🔴 High</option>
                             </select>
                         </div>
                     </div>
 
-
-
-
-
-                    <button type="submit"
+                    <button type="submit" form="remarks-form"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2">
                         <span>Update Ticket</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                         </svg>
                     </button>
 
@@ -138,6 +217,6 @@
             </div>
 
         </div>
-    </form>
+    </div>
 </div>
 {% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Manage Common Problems — TicketEasy{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+<style>
+  :root { --primary: #0f66d4; --teal: #12b0b0; --dark: #0f172a; --muted: #64748b; }
+
+  .page-wrap { max-width: 1200px; margin: 30px auto; padding: 0 24px; font-family: 'Inter', sans-serif; }
+
+  .page-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+  }
+  .page-header h1 { font-size: 24px; font-weight: 800; color: var(--dark); margin: 0; }
+  .page-header p { color: var(--muted); margin: 4px 0 0 0; font-size: 14px; }
+
+  .btn-back {
+    padding: 10px 20px; background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+    color: var(--muted); text-decoration: none; font-weight: 600; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+  }
+  .btn-back:hover { background: #f8fafc; color: var(--dark); }
+
+  /* ADD FORM */
+  .add-card {
+    background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px;
+    margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  }
+  .add-card h3 { font-size: 16px; font-weight: 700; color: var(--dark); margin: 0 0 20px 0; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+  .form-group input, .form-group textarea, .form-group select {
+    padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;
+    font-family: 'Inter', sans-serif; transition: 0.2s; background: #fdfdfd;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(18,176,176,0.1);
+  }
+
+  .btn-add {
+    padding: 12px 28px; background: linear-gradient(90deg, var(--primary), var(--teal));
+    color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 14px;
+    cursor: pointer; transition: 0.2s; margin-top: 8px;
+  }
+  .btn-add:hover { opacity: 0.95; transform: translateY(-1px); }
+
+  /* TABLE */
+  .table-card {
+    background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+    overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  }
+  .table-header {
+    padding: 20px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .table-title { font-size: 16px; font-weight: 700; color: var(--dark); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 14px 24px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+  td { padding: 14px 24px; font-size: 14px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+
+  .badge {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    display: inline-flex; align-items: center; text-transform: capitalize;
+  }
+  .b-cat { background: #eef3fb; color: #3b82f6; }
+  .b-high { background: #fee2e2; color: #ef4444; }
+  .b-medium { background: #ffedd5; color: #f97316; }
+  .b-low { background: #dcfce7; color: #16a34a; }
+
+  .btn-delete {
+    padding: 6px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px;
+    color: #ef4444; font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s;
+  }
+  .btn-delete:hover { background: #ef4444; color: white; border-color: #ef4444; }
+</style>
+
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div>
+      <h1>Manage Common Problems</h1>
+      <p>Add or remove pre-defined problems that employees can quick-select when raising tickets.</p>
+    </div>
+    <a href="{{ url_for('super_admin_dashboard') }}" class="btn-back"><i class="ph ph-arrow-left"></i> Back to Dashboard</a>
+  </div>
+
+  {# ===== ADD NEW PROBLEM FORM ===== #}
+  <div class="add-card">
+    <h3>➕ Add New Common Problem</h3>
+    <form action="{{ url_for('add_common_problem') }}" method="POST">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Dropdown Label</label>
+          <input name="label" required placeholder="e.g., WiFi Not Connecting">
+        </div>
+        <div class="form-group">
+          <label>Pre-fill Subject</label>
+          <input name="subject" required placeholder="e.g., WiFi is not connecting">
+        </div>
+        <div class="form-group form-full">
+          <label>Pre-fill Description</label>
+          <textarea name="description" rows="3" required placeholder="The default description that will auto-fill for the employee..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category">
+            {% for cat in categories %}
+            <option value="{{ cat.name }}">{{ cat.name|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Default Priority</label>
+          <select name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-add">Add Common Problem</button>
+    </form>
+  </div>
+
+  {# ===== EXISTING PROBLEMS TABLE ===== #}
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">Existing Problems ({{ problems|length }})</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Subject</th>
+          <th>Category</th>
+          <th>Priority</th>
+          <th width="100">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in problems %}
+        <tr>
+          <td style="font-weight: 600; color: var(--dark);">{{ p.label }}</td>
+          <td>{{ p.subject }}</td>
+          <td><span class="badge b-cat">{{ p.category }}</span></td>
+          <td><span class="badge b-{{ p.priority }}">{{ p.priority }}</span></td>
+          <td>
+            <form action="{{ url_for('delete_common_problem', pid=p.id) }}" method="POST" style="display:inline;"
+                  onsubmit="return confirm('Delete this problem?')">
+              <button type="submit" class="btn-delete">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">
+            No common problems added yet. Use the form above to add some.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

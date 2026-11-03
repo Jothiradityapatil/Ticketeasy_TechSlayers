@@ -70,3 +70,24 @@ class Ticket(db.Model):
     @suggested_steps.setter
     def suggested_steps(self, value):
         self._suggested_steps = json.dumps(value)
+
+class Feedback(db.Model):
+    __tablename__ = 'feedback'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), unique=True, nullable=False)
+    rating = db.Column(db.Integer, nullable=False)       # 1-5 stars
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    ticket = db.relationship('Ticket', backref=db.backref('feedback', uselist=False))
+
+class CommonProblem(db.Model):
+    __tablename__ = 'common_problems'
+
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(100), nullable=False)       # Shown in dropdown
+    subject = db.Column(db.String(255), nullable=False)     # Pre-fills subject
+    description = db.Column(db.Text, nullable=False)        # Pre-fills description
+    category = db.Column(db.String(80))                     # For reference
+    priority = db.Column(db.String(20))                     # For reference

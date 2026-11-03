@@ -1,0 +1,318 @@
+{
+  "total_tickets": 31,
+  "category_accuracy": "96.8%",
+  "sentiment_accuracy": "48.4%",
+  "overall_accuracy": "48.4%",
+  "detailed_results": [
+    {
+      "subject": "Laptop screen flickering",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Neutral",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Mouse not working",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Neutral",
+      "predicted_sentiment": "Neutral",
+      "sentiment_match": true,
+      "predicted_priority": "low"
+    },
+    {
+      "subject": "Keyboard keys stuck",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Printer offline",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Confused",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "medium"
+    },
+    {
+      "subject": "Laptop overheating badly",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Furious",
+      "predicted_sentiment": "Furious",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Monitor not displaying",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Confused",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Headset microphone broken",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Furious",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "SAP crashes on login",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Furious",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Excel not opening files",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Cannot install updates",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Password reset not working",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Confused",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Outlook keeps freezing",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Application updated successfully",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Grateful",
+      "predicted_sentiment": "Grateful",
+      "sentiment_match": true,
+      "predicted_priority": "low"
+    },
+    {
+      "subject": "Need Zoom installed",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Professional",
+      "predicted_sentiment": "Neutral",
+      "sentiment_match": false,
+      "predicted_priority": "medium"
+    },
+    {
+      "subject": "WiFi not connecting",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Urgent",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "VPN keeps disconnecting",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Urgent",
+      "predicted_sentiment": "Urgent",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Slow internet speed",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Cannot access shared drive",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Confused",
+      "predicted_sentiment": "Urgent",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Network down entire floor",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Furious",
+      "predicted_sentiment": "Furious",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Internet restored",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Grateful",
+      "predicted_sentiment": "Grateful",
+      "sentiment_match": true,
+      "predicted_priority": "low"
+    },
+    {
+      "subject": "Firewall blocking application",
+      "expected_category": "network",
+      "predicted_category": "network",
+      "category_match": true,
+      "expected_sentiment": "Professional",
+      "predicted_sentiment": "Neutral",
+      "sentiment_match": false,
+      "predicted_priority": "medium"
+    },
+    {
+      "subject": "Database backup failed",
+      "expected_category": "database",
+      "predicted_category": "database",
+      "category_match": true,
+      "expected_sentiment": "Urgent",
+      "predicted_sentiment": "Urgent",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "SQL query returning wrong results",
+      "expected_category": "database",
+      "predicted_category": "database",
+      "category_match": true,
+      "expected_sentiment": "Confused",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Database connection timeout",
+      "expected_category": "database",
+      "predicted_category": "database",
+      "category_match": true,
+      "expected_sentiment": "Frustrated",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Cannot access database",
+      "expected_category": "database",
+      "predicted_category": "database",
+      "category_match": true,
+      "expected_sentiment": "Neutral",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Data migration completed",
+      "expected_category": "database",
+      "predicted_category": "database",
+      "category_match": true,
+      "expected_sentiment": "Grateful",
+      "predicted_sentiment": "Neutral",
+      "sentiment_match": false,
+      "predicted_priority": "low"
+    },
+    {
+      "subject": "Database is extremely slow",
+      "expected_category": "database",
+      "predicted_category": "database",
+      "category_match": true,
+      "expected_sentiment": "Furious",
+      "predicted_sentiment": "Furious",
+      "sentiment_match": true,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Nothing works anymore",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Sad",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Oh great, another outage",
+      "expected_category": "software",
+      "predicted_category": "network",
+      "category_match": false,
+      "expected_sentiment": "Sarcastic",
+      "predicted_sentiment": "Furious",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Requesting new workstation",
+      "expected_category": "hardware",
+      "predicted_category": "hardware",
+      "category_match": true,
+      "expected_sentiment": "Professional",
+      "predicted_sentiment": "Frustrated",
+      "sentiment_match": false,
+      "predicted_priority": "high"
+    },
+    {
+      "subject": "Happy with the new system",
+      "expected_category": "software",
+      "predicted_category": "software",
+      "category_match": true,
+      "expected_sentiment": "Happy",
+      "predicted_sentiment": "Happy",
+      "sentiment_match": true,
+      "predicted_priority": "low"
+    }
+  ]
+}

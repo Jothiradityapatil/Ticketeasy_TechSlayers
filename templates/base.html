@@ -240,9 +240,9 @@
       <nav>
         <a href="{{ url_for('landing') }}">Home</a>
         {% if session.get('user') %}
-        {% if session.user.role == 'agent' or session.user.role == 'admin' %}
+        {% if session.user.role in ['agent', 'manager', 'super_admin'] %}
         <a href="{{ url_for('agent_dashboard') }}">Dashboard</a>
-        {% if session.user.email == 'super@admin.com' %}
+        {% if session.user.role == 'super_admin' %}
         <a href="{{ url_for('super_admin_dashboard') }}"
           style="color:#ffd700;border:1px solid #ffd700;padding:5px 10px;border-radius:6px;">God Mode</a>
         {% endif %}

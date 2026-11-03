@@ -62,7 +62,7 @@
     margin-bottom: 8px;
   }
 
-  input, textarea {
+  input, textarea, select {
     width: 100%;
     padding: 14px;
     border-radius: 12px;
@@ -73,11 +73,33 @@
     background: #fdfdfd;
   }
 
-  input:focus, textarea:focus {
+  input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--turq);
     box-shadow: 0 0 0 4px rgba(18, 176, 176, 0.1);
     background: white;
+  }
+
+  /* Quick Select Dropdown */
+  .quick-select-wrapper {
+    position: relative;
+  }
+
+  .quick-select-wrapper select {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 40px;
+  }
+
+  .quick-select-wrapper::after {
+    content: "▾";
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    font-size: 14px;
   }
 
   /* Magic AI Badge */
@@ -156,16 +178,33 @@
 
     <form method="post" action="{{ url_for('raise_ticket') }}" style="margin-top: 25px;">
       
+      {# ===== COMMON PROBLEMS DROPDOWN ===== #}
+      {% if common_problems %}
+      <div class="form-group">
+        <label>Quick Select (Optional)</label>
+        <div class="quick-select-wrapper">
+          <select id="common-problem-select" onchange="fillFromDropdown(this)">
+            <option value="">— Select a common problem —</option>
+            {% for p in common_problems %}
+            <option data-subject="{{ p.subject }}" data-description="{{ p.description }}">
+              {{ p.label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% endif %}
+
       <div class="form-group">
         <label>Subject</label>
-        <input name="subject" required 
+        <input name="subject" id="ticket-subject" required 
                placeholder="e.g., WiFi is not connecting in Lab 3"
                value="{{ request.args.get('subject', '') }}">
       </div>
 
       <div class="form-group">
         <label>Detailed Description</label>
-        <textarea name="description" rows="6" required 
+        <textarea name="description" id="ticket-description" rows="6" required 
                   placeholder="Please describe what happened, any error messages you see, and what you were doing when it occurred...">{{ request.args.get('description', '') }}</textarea>
       </div>
 
@@ -177,4 +216,13 @@
     </form>
   </div>
 </div>
+
+<script>
+  function fillFromDropdown(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    if (opt.value === "") return;
+    document.getElementById('ticket-subject').value = opt.dataset.subject || '';
+    document.getElementById('ticket-description').value = opt.dataset.description || '';
+  }
+</script>
 {% endblock %}

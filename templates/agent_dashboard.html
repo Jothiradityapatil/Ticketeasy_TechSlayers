@@ -224,6 +224,11 @@
       <p>Welcome back, {{ admin.name }}. You are logged in as <strong>{{ admin.role|title }}</strong>.</p>
     </div>
     <div class="header-actions">
+      {% if admin.role == 'manager' %}
+      <a href="{{ url_for('manager_feedback') }}" class="btn-logout" style="background: #f0fdf4; color: #16a34a; border-color: #bbf7d0;">
+        ⭐ View Feedback
+      </a>
+      {% endif %}
       <a href="{{ url_for('logout') }}" class="btn-logout"><i class="ph ph-sign-out"></i> Logout</a>
     </div>
   </div>

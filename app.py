@@ -1,3 +1,4 @@
+# pyright: reportCallIssue=false
 import os
 import secrets
 import asyncio
@@ -20,7 +21,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 
 from extensions import db
-from models import User, Ticket, Category, AdminCategories
+from models import User, Ticket, Category, AdminCategories, Feedback, CommonProblem
 from ai_engine import analyze_ticket_with_llm 
 
 # ------------------ APP INIT ------------------
@@ -78,7 +79,7 @@ def notify_status_change(ticket, recipient_email, type="update"):
         body = f"New Ticket Assigned!\n\nID: #{ticket.id}\nPriority: {ticket.priority}\nDescription:\n{ticket.description}\n\nPlease review on dashboard."
     elif type == "new_user":
         subject = f"[Ticket #{ticket.id}] Received: {ticket.subject}"
-        body = f"Hello {user_name},\n\nWe have received your ticket.\nID: #{ticket.id}\nStatus: {ticket.status}\n\nAn admin will review shortly."
+        body = f"Hello {user_name},\n\nWe have received your ticket.\nID: #{ticket.id}\nStatus: {ticket.status}\n\nAn agent will review shortly."
     elif type == "update":
         subject = f"[Update] Ticket #{ticket.id} is now {ticket.status.upper()}"
         body = f"Hello {user_name},\n\nYour ticket status is now: {ticket.status.upper()}.\nSubject: {ticket.subject}"
@@ -95,10 +96,10 @@ def get_best_agent_least_loaded(category_obj):
     2. Sort by Open Tickets (Low to High).
     3. Tie-breaker: Experience (Low to High).
     """
-    # NOTE: We specifically filter for 'agent' (and 'admin' as fallback).
+    # NOTE: We specifically filter for 'agent' only.
     # Managers are EXCLUDED from auto-routing.
     admins = db.session.query(User).join(AdminCategories).filter(
-        User.role.in_(['agent', 'admin']), 
+        User.role.in_(['agent']), 
         AdminCategories.category_id == category_obj.id
     ).all()
 
@@ -171,13 +172,13 @@ def login_required(fn):
 
 def agent_required(fn):
     """
-    Allows access to: Agents, Managers, Super Admins, and legacy Admins.
+    Allows access to: Agents, Managers, and Super Admins.
     """
     if iscoroutinefunction(fn):
         @wraps(fn)
         async def async_wrapper(*args, **kwargs):
             u = session.get("user")
-            if not u or u.get("role") not in ['agent', 'manager', 'admin', 'super_admin']: 
+            if not u or u.get("role") not in ['agent', 'manager', 'super_admin']: 
                 return redirect(url_for("agent_login"))
             return await fn(*args, **kwargs)
         return async_wrapper
@@ -185,7 +186,7 @@ def agent_required(fn):
         @wraps(fn)
         def sync_wrapper(*args, **kwargs):
             u = session.get("user")
-            if not u or u.get("role") not in ['agent', 'manager', 'admin', 'super_admin']: 
+            if not u or u.get("role") not in ['agent', 'manager', 'super_admin']: 
                 return redirect(url_for("agent_login"))
             return fn(*args, **kwargs)
         return sync_wrapper
@@ -198,7 +199,7 @@ def landing(): return render_template("landing.html")
 def auth():
     tab = request.args.get("tab", "login")
     role = request.args.get("role")
-    if tab == "register" and role: return redirect(url_for("register_agent" if role.lower() in ["agent", "admin"] else "register_employee"))
+    if tab == "register" and role: return redirect(url_for("register_agent" if role.lower() == "agent" else "register_employee"))
     return render_template("auth.html", tab=tab)
 
 @app.route("/login", methods=["GET", "POST"])
@@ -218,7 +219,7 @@ def login():
     # Redirect based on Role
     if user.email == SUPER_ADMIN_EMAIL or user.role == 'super_admin':
         return redirect(url_for("super_admin_dashboard"))
-    elif user.role in ['admin', 'manager', 'agent']:
+    elif user.role in ['manager', 'agent']:
         return redirect(url_for("agent_dashboard"))
     else:
         return redirect(url_for("employee_home"))
@@ -230,7 +231,7 @@ def agent_login():
     password = request.form.get("password") or ""
     
     # Allow Managers and Agents to login here
-    user = User.query.filter(User.email == email, User.role.in_(['admin', 'agent', 'manager', 'super_admin'])).first()
+    user = User.query.filter(User.email == email, User.role.in_(['agent', 'manager', 'super_admin'])).first()
     
     if not user or not user.check_password(password): return redirect(url_for("agent_login"))
     session["user"] = { "email": user.email, "name": user.name, "role": user.role }
@@ -245,7 +246,7 @@ def register_employee():
     if request.method == "GET": return render_template("register_employee.html")
     email = (request.form.get("email") or "").strip().lower()
     if User.query.filter_by(email=email).first(): return redirect(url_for("auth", tab="login"))
-    new_user = User(email=email, name=request.form.get("name"), role="employee", employee_role=request.form.get("employee_role"), verified=AUTO_VERIFY_REGISTRATION)
+    new_user = User(email=email, name=request.form.get("name"), role="employee", employee_role=request.form.get("employee_role"), verified=AUTO_VERIFY_REGISTRATION)  # type: ignore[call-arg]
     new_user.set_password(request.form.get("password"))
     db.session.add(new_user)
     db.session.commit()
@@ -258,11 +259,11 @@ def register_agent():
     if User.query.filter_by(email=email).first(): return redirect(url_for("auth", tab="login"))
     
     # Default new registrations to 'agent' unless manually changed in DB
-    new_agent = User(email=email, name=request.form.get("name"), role="agent", verified=True)
+    new_agent = User(email=email, name=request.form.get("name"), role="agent", verified=True)  # type: ignore[call-arg]
     new_agent.set_password(request.form.get("password"))
     db.session.add(new_agent)
     db.session.commit()
-    db.session.add(AdminCategories(admin_id=new_agent.id, category_id=int(request.form.get("category_id"))))
+    db.session.add(AdminCategories(admin_id=new_agent.id, category_id=int(request.form.get("category_id"))))  # type: ignore[call-arg]
     db.session.commit()
     return redirect(url_for("agent_login"))
 
@@ -270,7 +271,7 @@ def register_agent():
 @login_required
 def employee_home():
     user = session.get("user")
-    if user.get("role") in ['admin', 'manager', 'agent']:
+    if user.get("role") in ['manager', 'agent']:
         return redirect(url_for("agent_dashboard"))
 
     db_user = User.query.filter_by(email=user["email"]).first()
@@ -312,7 +313,9 @@ def emp_history():
 async def raise_ticket():
     user_session = session.get("user")
     db_user = User.query.filter_by(email=user_session["email"]).first()
-    if request.method == "GET": return render_template("raise_ticket.html", user=user_session)
+    if request.method == "GET":
+        problems = CommonProblem.query.all()
+        return render_template("raise_ticket.html", user=user_session, common_problems=problems)
     
     subject = request.form.get("subject")
     description = request.form.get("description")
@@ -326,12 +329,12 @@ async def raise_ticket():
     # 3. ROUTING: Find the best AGENT (Least Loaded)
     assigned_agent = get_best_agent_least_loaded(category_obj)
     
-    # Fallback: If no agent found, try any admin or manager to ensure it gets saved
+    # Fallback: If no agent found, try any manager to ensure it gets saved
     if not assigned_agent:
-        assigned_agent = User.query.filter(User.role.in_(['admin', 'manager'])).first()
+        assigned_agent = User.query.filter(User.role.in_(['manager', 'super_admin'])).first()
 
     # 4. Create Ticket
-    ticket = Ticket(
+    ticket_data = dict(
         subject=subject, 
         description=description, 
         priority=analysis.priority, 
@@ -343,6 +346,7 @@ async def raise_ticket():
         sentiment=analysis.sentiment, 
         suggested_steps=analysis.suggested_steps
     )
+    ticket = Ticket(**ticket_data)  # type: ignore[call-arg]
     db.session.add(ticket)
     db.session.commit()
 
@@ -414,7 +418,17 @@ def agent_dashboard():
 def super_admin_dashboard():
     if session["user"]["email"] != SUPER_ADMIN_EMAIL: return redirect(url_for("agent_dashboard"))
     tickets = Ticket.query.order_by(Ticket.created_at.desc()).all()
-    return render_template("super_dashboard.html", admin=session["user"], tickets=tickets, stats={})
+    stats = {
+        "total": len(tickets),
+        "open": len([t for t in tickets if t.status == 'open']),
+        "in_progress": len([t for t in tickets if t.status == 'in-progress']),
+        "resolved": len([t for t in tickets if t.status == 'resolved']),
+        "software": len([t for t in tickets if t.category == 'software']),
+        "hardware": len([t for t in tickets if t.category == 'hardware']),
+        "network": len([t for t in tickets if t.category == 'network']),
+        "database": len([t for t in tickets if t.category == 'database']),
+    }
+    return render_template("super_dashboard.html", admin=session["user"], tickets=tickets, stats=stats)
 
 @app.route("/ticket/<int:ticket_id>")
 @login_required
@@ -443,6 +457,98 @@ def ticket_update(ticket_id):
     if old_status != t.status: notify_status_change(t, t.creator.email, type="update")
     return redirect(url_for("ticket_detail", ticket_id=ticket_id))
 
+# ==================== FEEDBACK ROUTES ====================
+
+@app.route("/ticket/<int:ticket_id>/feedback", methods=["POST"])
+@login_required
+def submit_feedback(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    db_user = User.query.filter_by(email=session["user"]["email"]).first()
+
+    # Only the ticket creator can leave feedback, and only on resolved tickets
+    if ticket.created_by_id != db_user.id or ticket.status != 'resolved':
+        flash("Cannot submit feedback.", "error")
+        return redirect(url_for("ticket_detail", ticket_id=ticket_id))
+
+    if ticket.feedback:
+        flash("Feedback already submitted.", "info")
+        return redirect(url_for("ticket_detail", ticket_id=ticket_id))
+
+    rating = int(request.form.get("rating", 3))
+    comment = (request.form.get("feedback_comment") or "").strip()
+    feedback = Feedback(ticket_id=ticket_id, rating=max(1, min(5, rating)), comment=comment)  # type: ignore[call-arg]
+    db.session.add(feedback)
+    db.session.commit()
+    flash("Thank you for your feedback!", "success")
+    return redirect(url_for("ticket_detail", ticket_id=ticket_id))
+
+@app.route("/manager/feedback")
+@login_required
+def manager_feedback():
+    user = session.get("user")
+    db_user = User.query.filter_by(email=user["email"]).first()
+    if db_user.role != 'manager':
+        return redirect(url_for("agent_dashboard"))
+
+    # Find which category this manager handles
+    cat_link = AdminCategories.query.filter_by(admin_id=db_user.id).first()
+    if not cat_link:
+        return render_template("manager_feedback.html", feedbacks=[], category="Unknown", avg_rating=0, user=user)
+
+    category = Category.query.get(cat_link.category_id)
+
+    # Get all feedback for tickets in this category
+    feedbacks = db.session.query(Feedback).join(Ticket).filter(
+        Ticket.category_id == cat_link.category_id
+    ).order_by(Feedback.created_at.desc()).all()
+
+    avg_rating = round(sum(f.rating for f in feedbacks) / len(feedbacks), 1) if feedbacks else 0
+
+    return render_template("manager_feedback.html",
+        feedbacks=feedbacks, category=category.name, avg_rating=avg_rating, user=user)
+
+# ==================== COMMON PROBLEMS ROUTES ====================
+
+@app.route("/super-admin/common-problems")
+@login_required
+def manage_common_problems():
+    if session["user"]["email"] != SUPER_ADMIN_EMAIL:
+        return redirect(url_for("agent_dashboard"))
+    problems = CommonProblem.query.all()
+    categories = Category.query.all()
+    return render_template("manage_problems.html", problems=problems, categories=categories)
+
+@app.route("/super-admin/common-problems/add", methods=["POST"])
+@login_required
+def add_common_problem():
+    if session["user"]["email"] != SUPER_ADMIN_EMAIL:
+        return redirect(url_for("agent_dashboard"))
+    problem_data = dict(
+        label=request.form.get("label"),
+        subject=request.form.get("subject"),
+        description=request.form.get("description"),
+        category=request.form.get("category"),
+        priority=request.form.get("priority", "medium")
+    )
+    problem = CommonProblem(**problem_data)  # type: ignore[call-arg]
+    db.session.add(problem)
+    db.session.commit()
+    flash("Common problem added!", "success")
+    return redirect(url_for("manage_common_problems"))
+
+@app.route("/super-admin/common-problems/<int:pid>/delete", methods=["POST"])
+@login_required
+def delete_common_problem(pid):
+    if session["user"]["email"] != SUPER_ADMIN_EMAIL:
+        return redirect(url_for("agent_dashboard"))
+    problem = CommonProblem.query.get_or_404(pid)
+    db.session.delete(problem)
+    db.session.commit()
+    flash("Problem removed.", "success")
+    return redirect(url_for("manage_common_problems"))
+
+# ==================== AUTH & MISC ====================
+
 @app.route("/logout")
 def logout():
     session.pop("user", None)
@@ -452,8 +558,27 @@ def setup_database():
     with app.app_context():
         db.create_all()
         for c in ['software', 'hardware', 'network', 'database']:
-            if not Category.query.filter_by(name=c).first(): db.session.add(Category(name=c))
+            if not Category.query.filter_by(name=c).first(): db.session.add(Category(name=c))  # type: ignore[call-arg]
         db.session.commit()
+
+        # Seed default common problems if table is empty
+        if CommonProblem.query.count() == 0:
+            default_problems = [
+                CommonProblem(**p) for p in [  # type: ignore[call-arg]
+                    dict(label="WiFi Not Connecting", subject="WiFi is not connecting", description="I am unable to connect to the office WiFi network. I have tried restarting my device but the issue persists.", category="network", priority="medium"),
+                    dict(label="VPN Keeps Disconnecting", subject="VPN keeps disconnecting", description="The VPN connection drops frequently during work sessions, disrupting my workflow.", category="network", priority="high"),
+                    dict(label="Laptop Running Slow", subject="Laptop is very slow", description="My laptop takes a very long time to open applications and respond to commands.", category="hardware", priority="medium"),
+                    dict(label="Printer Not Working", subject="Printer not responding", description="I cannot print documents. The printer shows offline status even though it is powered on.", category="hardware", priority="low"),
+                    dict(label="Software Installation Request", subject="Need software installed", description="I need a new software application installed on my workstation for work purposes.", category="software", priority="low"),
+                    dict(label="Password Reset Issue", subject="Cannot reset my password", description="The password reset portal is not working for me. It shows an error when I try to reset.", category="software", priority="medium"),
+                    dict(label="Email Not Syncing", subject="Outlook email not syncing", description="My Outlook is not receiving or sending new emails. The sync seems to be stuck.", category="software", priority="high"),
+                    dict(label="Database Access Denied", subject="Cannot access the database", description="Getting 'access denied' error when trying to connect to the database server.", category="database", priority="medium"),
+                ]
+            ]
+            for p in default_problems:
+                db.session.add(p)
+            db.session.commit()
+            print("Seeded 8 default common problems.")
 
 if __name__ == "__main__":
     setup_database()
@@ -462,4 +587,3 @@ if __name__ == "__main__":
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     app.run(debug=True, port=5000, use_reloader=False)
-    
